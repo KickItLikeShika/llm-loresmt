@@ -1,28 +1,25 @@
-import os
 import random
 
-
+import pandas as pd
 import torch
 from unsloth import FastLanguageModel
 from unsloth.chat_templates import get_chat_template, train_on_responses_only
 from trl import SFTTrainer, SFTConfig
 from datasets import Dataset
 
-from clean_opus import clean
-
 random.seed(42)
 
 print("prepping data")
-raw_data = clean('data/Tatoeba.en-tt.tsv')
-random.shuffle(raw_data)
-
+raw_data = pd.read_csv('data/syntheticdata.csv')
+raw_data = raw_data.sample(frac=1).reset_index(drop=True)
 num_eval_samples = 200
 eval_data = raw_data[:num_eval_samples]
 train_data = raw_data[num_eval_samples:]
 
 def format_data(data):
     formatted_data = []
-    for en_text, tt_text in data:
+    # for en_text, tt_text in data:
+    for en_text, tt_text in zip(data['english_text'].tolist(), data['tatar_text'].tolist()):
         formatted_data.append({"conversations": [
             {"role": "system", "content": "You are a helpful assistant that translates english text to tatar."},
             {"role": "user", "content": f"Translate this english text to tatar (no explanation, only output the translation in tatar): {en_text}"},
